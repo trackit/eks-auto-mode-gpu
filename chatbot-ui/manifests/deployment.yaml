@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deepseek-chatbot
+  namespace: deepseek
+  labels:
+    app: deepseek-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deepseek-chatbot
+  template:
+    metadata:
+      labels:
+        app: deepseek-chatbot
+    spec:
+      containers:
+      - name: deepseek-chatbot
+        image: __IMAGE_DEEPSEEK_CHATBOT__
+        ports:
+        - containerPort: 7860
+        env:
+        - name: ADMIN_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: deepseek-chatbot-secrets
+              key: admin-username
+        - name: ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: deepseek-chatbot-secrets
+              key: admin-password
+        - name: MODEL_URLS
+          value: '["http://deepseek-gpu-vllm-chart", "http://deepseek-neuron-vllm-chart"]'
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: deepseek-chatbot-service
+  namespace: deepseek
+spec:
+  selector:
+    app: deepseek-chatbot
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 7860
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: deepseek-chatbot-secrets
+  namespace: deepseek
+type: Opaque
+stringData:
+  admin-username: admin
+  admin-password: __PASSWORD__
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: deepseek-chatbot-ingress
+  namespace: deepseek
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: deepseek-chatbot-service
+            port:
+              number: 80

@@ -3,11 +3,11 @@
 ## How to deploy the custom Trackit fork
 
 Check the `sample.tfvars` and replace the values by the values that you want
-Set `enable_deep_seek_gpu` to `false`
+Set `enable_gpu` to `false`
 then execute `terraform plan -out="plan.out"`
 and after `terraform apply "plan.out"`
 
-When the cluster is deployed change `enable_deep_seek_gpu` to `true` and re-apply
+When the cluster is deployed change `enable_gpu` to `true` and re-apply
 
 `aws eks --region us-west-2 update-kubeconfig --name eks-automode-gpu`
 
@@ -39,9 +39,9 @@ Maybe we can adapt the terraform code to handle more models or to scale
 
 ## How to deploy Fooocus
 
-`export ECR_REPO=$(terraform output ecr_repository_uri | jq -r)`
+`export ECR_REPO=$(terraform output ecr_repository_uri_fooocus | jq -r)`
 
-`docker build -t $ECR_REPO:latest .`
+`docker build -t $ECR_REPO:latest ./fooocus-chart/application/`
 
 `aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO`
 
@@ -96,7 +96,7 @@ You can modify this file to change resource configurations, node selectors, or t
 
 ``` bash
 # Let's start by just enabling the GPU based option:
-terraform apply -auto-approve -var="enable_deep_seek_gpu=true" -var="enable_auto_mode_node_pool=true"
+terraform apply -auto-approve -var="enable_gpu=true" -var="enable_auto_mode_node_pool=true"
 
 # Check the pods in the 'deepseek' namespace 
 kubectl get po -n deepseek
@@ -130,7 +130,7 @@ kubectl get po -n deepseek
   finch rmi $ECR_REPO_NEURON:0.1
 
   # Enable additional nodepool and deploy vLLM DeepSeek model
-  terraform apply -auto-approve -var="enable_deep_seek_gpu=true" -var="enable_deep_seek_neuron=true" -var="enable_auto_mode_node_pool=true"
+  terraform apply -auto-approve -var="enable_gpu=true" -var="enable_neuron=true" -var="enable_auto_mode_node_pool=true"
   ```
 </details>
 

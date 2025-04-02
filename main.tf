@@ -101,21 +101,32 @@ module "eks" {
   tags = local.tags
 }
 
+resource "aws_ecr_repository" "fooocus-ecr" {
+  name                 = "${local.name}-fooocus"
+  image_tag_mutability = "MUTABLE"
+  tags = local.tags
+}
 
 resource "aws_ecr_repository" "chatbot-ecr" {
   name                 = "${local.name}-chatbot"
   image_tag_mutability = "MUTABLE"
+  tags = local.tags
 }
 
 resource "aws_ecr_repository" "neuron-ecr" {
   name                 = "${local.name}-neuron-base"
   image_tag_mutability = "MUTABLE"
+  tags = local.tags
 }
 
 # Outputs
 output "configure_kubectl" {
   description = "Configure kubectl: make sure you're logged in with the correct AWS profile and run the following command to update your kubeconfig"
   value       = "aws eks --region ${local.region} update-kubeconfig --name ${module.eks.cluster_name}"
+}
+
+output "ecr_repository_uri_fooocus" {
+  value = aws_ecr_repository.fooocus-ecr.repository_url
 }
 
 output "ecr_repository_uri" {

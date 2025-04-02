@@ -1,3 +1,54 @@
+# resource "aws_iam_role" "eks_node_role" {
+#   name = "eks-node-role"
+
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole",
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "ec2.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
+# }
+
+# resource "aws_iam_role_policy_attachment" "eks_node_policy" {
+#   role       = aws_iam_role.eks_node_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+# }
+
+# resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+#   role       = aws_iam_role.eks_node_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+# }
+
+# resource "aws_iam_role_policy_attachment" "ec2_container_registry_read_only" {
+#   role       = aws_iam_role.eks_node_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+# }
+
+# resource "kubernetes_manifest" "gpu_nodeclass" {
+#   count = var.enable_auto_mode_node_pool && var.enable_deep_seek_gpu ? 1 : 0
+#   manifest = {
+#     apiVersion = "eks.amazonaws.com/v1"
+#     kind       = "NodeClass"
+#     metadata = {
+#       name = "gpu-nodeclass"
+#     }
+#     spec = {
+#       role = aws_iam_role.eks_node_role.name
+#       ephemeralStorage = {
+#         size = "50Gi"
+#       }
+#     }
+#   }
+
+#   depends_on = [module.eks]
+# }
+
 resource "kubernetes_manifest" "gpu_nodepool" {
   count = var.enable_auto_mode_node_pool && var.enable_deep_seek_gpu ? 1 : 0
   manifest = {
@@ -19,6 +70,7 @@ resource "kubernetes_manifest" "gpu_nodepool" {
             group = "eks.amazonaws.com"
             kind  = "NodeClass"
             name  = "default"
+            #name  = "gpu-nodeclass"
           }
           taints = [
             {

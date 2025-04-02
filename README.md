@@ -9,6 +9,8 @@ and after `terraform apply "plan.out"`
 
 When the cluster is deployed change `enable_deep_seek_gpu` to `true` and re-apply
 
+`aws eks --region us-west-2 update-kubeconfig --name eks-automode-gpu`
+
 Check if the pod and node is ready
 
 `kubectl get po -n deepseek` and `kubectl get no`
@@ -35,7 +37,16 @@ curl -X POST "http://localhost:8080/v1/chat/completions" -H "Content-Type: appli
 I have not tested if the neuron instance work as well as the chatbot ui
 Maybe we can adapt the terraform code to handle more models or to scale
 
-**end of my notes**
+## How to deploy Fooocus
+
+`export ECR_REPO=$(terraform output ecr_repository_uri | jq -r)`
+
+`docker build -t $ECR_REPO:latest .`
+
+`aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPO`
+
+`docker push $ECR_REPO:latest`
+
 
 In this tutorial, we’ll walk you through how to host [**DeepSeek-R1**](https://github.com/deepseek-ai/DeepSeek-R1) model on AWS using **Amazon EKS**. We are using [**Amazon EKS Auto Mode**](https://aws.amazon.com/eks/auto-mode/?trk=309fae93-0dac-4940-8d50-5b585d53959f&sc_channel=el) for the the flexibility and scalability that it provides, while eliminating the need for you to manage the Kubernetes control plane, compute, storage, and networking components.
 

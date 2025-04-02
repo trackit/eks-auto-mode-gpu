@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fooocus-deployment
+  labels:
+    owner: devops
+    instanceType: gpu
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: fooocus
+  template:
+    metadata:
+      labels:
+        app: fooocus
+        owner: devops
+        instanceType: gpu
+    spec:
+      containers:
+      - name: fooocus-container
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 8080
+        - containerPort: 7865
+        # volumeMounts:
+        # - name: fooocus-data
+        #   mountPath: /content/data
+        env:
+        - name: CMDARGS
+          value: "--listen"
+        - name: DATADIR
+          value: "/content/data"
+        - name: config_path
+          value: "/content/data/config.txt"
+        - name: config_example_path
+          value: "/content/data/config_modification_tutorial.txt"
+        - name: path_checkpoints
+          value: "/content/data/models/checkpoints/"
+        - name: path_loras
+          value: "/content/data/models/loras/"
+        - name: path_embeddings
+          value: "/content/data/models/embeddings/"
+        - name: path_vae_approx
+          value: "/content/data/models/vae_approx/"
+        - name: path_upscale_models
+          value: "/content/data/models/upscale_models/"
+        - name: path_inpaint
+          value: "/content/data/models/inpaint/"
+        - name: path_controlnet
+          value: "/content/data/models/controlnet/"
+        - name: path_clip_vision
+          value: "/content/data/models/clip_vision/"
+        - name: path_fooocus_expansion
+          value: "/content/data/models/prompt_expansion/fooocus_expansion/"
+        - name: path_outputs
+          value: "/content/app/outputs/"
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            cpu: "500m"
+            memory: "55Gi"
+          requests:
+            nvidia.com/gpu: 1
+            cpu: "500m"
+            memory: "55Gi"
+      # volumes:
+      # - name: fooocus-data
+      #   persistentVolumeClaim:
+      #     claimName: fooocus-data-pvc
+      tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+      nodeSelector:
+        instanceType: "gpu"

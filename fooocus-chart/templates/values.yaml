@@ -1,0 +1,7 @@
+namespace: fooocus
+replicaCount: 1
+
+image:
+  repository: ecr_repository
+  tag: latest
+  pullPolicy: IfNotPresent

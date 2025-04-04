@@ -1,43 +1,31 @@
-# Hosting DeepSeek-R1 on Amazon EKS
+# Hosting Fooocus and DeepSeek-R1 on Amazon EKS
 
-## How to deploy the custom Trackit fork
+*This repository is a fork of the [original project by AWS Samples](https://github.com/aws-samples/deepseek-using-vllm-on-eks). It has been modified to include additional features and improvements, including the integration of Fooocus.*
 
-Check the `sample.tfvars` and replace the values by the values that you want
-Set `enable_gpu` to `false`
+## How to deploy the EKS Cluster
+
+Create the `terraform.tfvars` file according to the `sample.tfvars` and replace the values by the values that you want
+
+Set all to `false`
+
+```hcl
+deploy_deepseek = false
+deploy_fooocus = false
+enable_neuron = false
+enable_gpu = false
+```
+
 then execute `terraform plan -out="plan.out"`
+
 and after `terraform apply "plan.out"`
 
-When the cluster is deployed change `enable_gpu` to `true` and re-apply
+Configure the kubectl to use the EKS cluster according to the region and name of the cluster
 
 `aws eks --region us-west-2 update-kubeconfig --name eks-automode-gpu`
 
-Check if the pod and node is ready
+## Deploying Fooocus on Amazon EKS Auto Mode
 
-`kubectl get po -n deepseek` and `kubectl get no`
-
-Then foward the port to localhost
-
-`kubectl port-forward svc/deepseek-gpu-vllm-chart -n deepseek 8080:80`
-
-Then send a request to see if it's working fine
-
-```sh
-# Make sur to use the right model specified on the terraform variable
-curl -X POST "http://localhost:8080/v1/chat/completions" -H "Content-Type: application/json" --data '{
- "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
- "messages": [
- {
- "role": "user",
- "content": "What is Kubernetes?"
- }
- ]
- }'
-```
-
-I have not tested if the neuron instance work as well as the chatbot ui
-Maybe we can adapt the terraform code to handle more models or to scale
-
-## How to deploy Fooocus
+Build the Fooocus container image and push it to Amazon ECR.
 
 `export ECR_REPO=$(terraform output ecr_repository_uri_fooocus | jq -r)`
 
@@ -47,8 +35,32 @@ Maybe we can adapt the terraform code to handle more models or to scale
 
 `docker push $ECR_REPO:latest`
 
+Then update your `terraform.tfvars` file to set the `deploy_fooocus` variable to `true` as well as the `enable_gpu` variable to `true`.
+Fooocus does not support Neuron based instances at the moment.
 
-In this tutorial, we’ll walk you through how to host [**DeepSeek-R1**](https://github.com/deepseek-ai/DeepSeek-R1) model on AWS using **Amazon EKS**. We are using [**Amazon EKS Auto Mode**](https://aws.amazon.com/eks/auto-mode/?trk=309fae93-0dac-4940-8d50-5b585d53959f&sc_channel=el) for the the flexibility and scalability that it provides, while eliminating the need for you to manage the Kubernetes control plane, compute, storage, and networking components.
+```hcl
+deploy_fooocus = true
+enable_gpu = true
+```
+
+Then execute `terraform plan -out="plan.out"` and `terraform apply "plan.out"`
+
+After the deployment is finished, you can check the status of the pods in the `fooocus` namespace.
+
+```bash
+kubectl get pods -n fooocus
+```
+You should see the `fooocus` pod running.
+
+### Interact with the Fooocus Web UI
+To access the Fooocus web UI, you need to set up a port-forwarding session to the Fooocus service.
+
+```bash
+# Set up port forwarding to access the Fooocus web UI
+kubectl port-forward svc/fooocus-service -n fooocus 7865:7865
+```
+
+Then open your web browser and navigate to `http://localhost:7865`.
 
 ## Deploying DeepSeek-R1 on Amazon EKS Auto Mode
 
@@ -175,7 +187,7 @@ Next, we can create a local proxy to interact with the model using a curl reques
 # Set up a proxy to forward the service port to your local terminal
 # We are exposing Neuron based on port 8080 and GPU based on port 8081
 kubectl port-forward svc/deepseek-neuron-vllm-chart -n deepseek 8080:80 > port-forward-neuron.log 2>&1 &
-kubectl port-forward svc/deepseek-gpu-vllm-chart -n deepseek 8081:80 > port-forward-gpu.log 2>&1 &
+kubectl port-forward svc/deepseek-gpu-vllm-chart -n deepseek 8080:80 > port-forward-gpu.log 2>&1 &
 
 # Send a curl request to the model (change the port according to the accelerator you are using)
 curl -X POST "http://localhost:8080/v1/chat/completions" -H "Content-Type: application/json" --data '{

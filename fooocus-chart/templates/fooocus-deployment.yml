@@ -22,7 +22,6 @@ spec:
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-        - containerPort: 8080
         - containerPort: 7865
         # volumeMounts:
         # - name: fooocus-data
@@ -57,18 +56,15 @@ spec:
         - name: path_outputs
           value: "/content/app/outputs/"
         resources:
-          limits:
-            nvidia.com/gpu: 1
-            cpu: "500m"
-            memory: "55Gi"
-          requests:
-            nvidia.com/gpu: 1
-            cpu: "500m"
-            memory: "55Gi"
+          {{ toYaml .Values.resources | nindent 12 }}
       # volumes:
       # - name: fooocus-data
       #   persistentVolumeClaim:
       #     claimName: fooocus-data-pvc
+      livenessProbe:
+        {{- toYaml .Values.livenessProbe | nindent 12 }}
+      readinessProbe:
+        {{- toYaml .Values.readinessProbe | nindent 12 }}
       tolerations:
       - key: "nvidia.com/gpu"
         operator: "Exists"

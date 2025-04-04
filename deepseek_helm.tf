@@ -1,5 +1,5 @@
 resource "helm_release" "deepseek_gpu" {
-  count            = var.enable_deep_seek_gpu ? 1 : 0
+  count            = var.enable_gpu && var.deploy_deepseek ? 1 : 0
   name             = "deepseek-gpu"
   chart            = "./vllm-chart"
   create_namespace = true
@@ -46,7 +46,7 @@ resource "helm_release" "deepseek_gpu" {
 }
 
 resource "helm_release" "deepseek_neuron" {
-  count            = var.enable_deep_seek_neuron ? 1 : 0
+  count            = var.enable_neuron && var.deploy_deepseek ? 1 : 0
   name             = "deepseek-neuron"
   chart            = "./vllm-chart"
   create_namespace = true

@@ -1,13 +1,25 @@
-variable "enable_deep_seek_gpu" {
-  description = "Enable DeepSeek using GPUs"
+variable "enable_gpu" {
+  description = "Enable GPUs"
   type        = bool
   default     = false
 }
 
-variable "enable_deep_seek_neuron" {
-  description = "Enable DeepSeek using Neuron"
+variable "enable_neuron" {
+  description = "Enable Neuron"
   type        = bool
   default     = false
+}
+
+variable "deploy_deepseek" {
+  description = "Deploy DeepSeek"
+  type        = bool
+  default     = false
+}
+
+variable "deploy_fooocus" {
+  description = "Deploy Fooocus"
+  type        = bool
+  default     = false 
 }
 
 variable "enable_auto_mode_node_pool" {

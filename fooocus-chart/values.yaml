@@ -1,0 +1,29 @@
+namespace: fooocus
+replicaCount: 1
+
+image:
+  repository: ecr_repository
+  tag: latest
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+    cpu: "32"
+    memory: "100Gi"
+  requests:
+    nvidia.com/gpu: 1
+    cpu: "16"
+    memory: "30Gi"
+
+livenessProbe:
+  httpGet:
+  port: 7865
+  initialDelaySeconds: 1800
+  periodSeconds: 15
+
+readinessProbe:
+  httpGet:
+  port: 7865
+  initialDelaySeconds: 1800
+  periodSeconds: 5

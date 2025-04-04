@@ -1,5 +1,5 @@
 resource "kubernetes_manifest" "gpu_nodepool" {
-  count = var.enable_auto_mode_node_pool && var.enable_deep_seek_gpu ? 1 : 0
+  count = var.enable_auto_mode_node_pool && var.enable_gpu ? 1 : 0
   manifest = {
     apiVersion = "karpenter.sh/v1"
     kind       = "NodePool"
@@ -57,7 +57,7 @@ resource "kubernetes_manifest" "gpu_nodepool" {
 }
 
 resource "kubernetes_manifest" "neuron_nodepool" {
-  count = var.enable_auto_mode_node_pool && var.enable_deep_seek_neuron ? 1 : 0
+  count = var.enable_auto_mode_node_pool && var.enable_neuron ? 1 : 0
   manifest = {
     apiVersion = "karpenter.sh/v1"
     kind       = "NodePool"

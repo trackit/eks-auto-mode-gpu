@@ -12,37 +12,6 @@ locals {
   }
 }
 
-# Define the required providers
-provider "aws" {
-  region = local.region # Change to your desired region
-}
-
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-  }
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      # This requires the awscli to be installed locally where Terraform is executed
-      args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-    }
-  }
-}
-
 data "aws_availability_zones" "available" {
   # Do not include local zones
   filter {
@@ -99,6 +68,10 @@ module "eks" {
   subnet_ids = module.vpc.private_subnets
 
   tags = local.tags
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_name
 }
 
 resource "aws_ecr_repository" "fooocus-ecr" {
@@ -178,139 +151,5 @@ resource "aws_eks_addon" "amazon_cloudwatch_observability" {
   pod_identity_association {
     role_arn = aws_iam_role.cloudwatch_agent_role.arn
     service_account = "cloudwatch-agent"
-  }
-}
-
-resource "helm_release" "prometheus_adapter" {
-  name       = "prometheus-adapter"
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "prometheus-adapter"
-  namespace  = "monitoring"
-  create_namespace = true
-  depends_on = [module.eks]
-
-  values = [
-    <<-EOT
-    prometheus:
-      url: http://prometheus-operator-kube-p-prometheus.monitoring.svc
-    rules:
-      custom:
-        - seriesQuery: 'DCGM_FI_DEV_GPU_UTIL{exported_namespace!="",exported_pod!=""}'
-          resources:
-            overrides:
-              exported_namespace: {resource: "namespace"}
-              exported_pod: {resource: "pod"}
-          name:
-            matches: "DCGM_FI_DEV_GPU_UTIL"
-            as: "gpu_utilization"
-          metricsQuery: 'avg(DCGM_FI_DEV_GPU_UTIL{<<.LabelMatchers>>}) by (<<.GroupBy>>) / 100'
-    EOT
-  ]
-}
-
-resource "helm_release" "prometheus_operator" {
-  name             = "prometheus-operator"
-  namespace        = "monitoring"
-  create_namespace = true
-
-  repository = "https://prometheus-community.github.io/helm-charts"
-  chart      = "kube-prometheus-stack"
-  depends_on = [module.eks]
-
-  values = [
-    <<-EOT
-    prometheus:
-      prometheusSpec:
-        serviceMonitorSelectorNilUsesHelmValues: false
-        serviceMonitorNamespaceSelector:
-          matchNames:
-            - gpu-monitoring
-        serviceMonitorSelector:
-          matchLabels:
-            release: prometheus
-
-    grafana:
-      enabled: true
-      adminPassword: "admin"
-
-    alertmanager:
-      enabled: true
-    EOT
-  ]
-}
-
-resource "helm_release" "dcgm_exporter" {
-  name       = "dcgm-exporter"
-  namespace  = "gpu-monitoring"
-  repository = "https://nvidia.github.io/dcgm-exporter/helm-charts"
-  chart      = "dcgm-exporter"
-  create_namespace = true
-  depends_on = [module.eks]
-
-  values = [
-    <<-EOT
-    service:
-      type: ClusterIP
-      port: 9400
-    tolerations:
-      - key: "nvidia.com/gpu"
-        operator: "Exists"
-        effect: "NoSchedule"
-    EOT
-  ]
-}
-
-resource "kubernetes_horizontal_pod_autoscaler_v2" "gpu_utilization_hpa" {
-  metadata {
-    name      = "gpu-utilization-hpa"
-    namespace = "deepseek"
-  }
-
-  spec {
-    scale_target_ref {
-      api_version = "apps/v1"
-      kind        = "Deployment"
-      name        = "deepseek-gpu-vllm-chart"
-    }
-
-    min_replicas = 1
-    max_replicas = 5
-
-    metric {
-      type = "Pods"
-
-      pods {
-        metric {
-          name = "gpu_utilization"
-        }
-
-        target {
-          type          = "AverageValue"
-          average_value = "500m"
-        }
-      }
-    }
-
-    behavior {
-      scale_up {
-        stabilization_window_seconds = 30
-        select_policy                = "Max"
-        policy {
-          type          = "Pods"
-          value         = 2
-          period_seconds = 60
-        }
-      }
-
-      scale_down {
-        stabilization_window_seconds = 60
-        select_policy                = "Min"
-        policy {
-          type          = "Percent"
-          value         = 50
-          period_seconds = 60
-        }
-      }
-    }
   }
 }

@@ -31,14 +31,14 @@ resource "helm_release" "deepseek_gpu" {
       httpGet:
         path: /health
         port: 8000
-      initialDelaySeconds: 1800
+      initialDelaySeconds: 180
       periodSeconds: 10
 
     readinessProbe:
       httpGet:
         path: /health
         port: 8000
-      initialDelaySeconds: 1800
+      initialDelaySeconds: 180
       periodSeconds: 5
     EOT
   ]
@@ -93,14 +93,14 @@ resource "helm_release" "deepseek_neuron" {
       httpGet:
         path: /health
         port: 8000
-      initialDelaySeconds: 1800
+      initialDelaySeconds: 180
       periodSeconds: 10
 
     readinessProbe:
       httpGet:
         path: /health
         port: 8000
-      initialDelaySeconds: 1800
+      initialDelaySeconds: 180
       periodSeconds: 5
     EOT
   ]

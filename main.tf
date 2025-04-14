@@ -152,4 +152,6 @@ resource "aws_eks_addon" "amazon_cloudwatch_observability" {
     role_arn = aws_iam_role.cloudwatch_agent_role.arn
     service_account = "cloudwatch-agent"
   }
+
+  depends_on = [module.eks]
 }

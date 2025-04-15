@@ -16,6 +16,13 @@ resource "helm_release" "dcgm_exporter" {
       - key: "nvidia.com/gpu"
         operator: "Exists"
         effect: "NoSchedule"
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: eks.amazonaws.com/instance-gpu-count
+              operator: Exists
     EOT
   ]
 }

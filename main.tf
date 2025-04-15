@@ -12,37 +12,6 @@ locals {
   }
 }
 
-# Define the required providers
-provider "aws" {
-  region = local.region # Change to your desired region
-}
-
-provider "kubernetes" {
-  host                   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    # This requires the awscli to be installed locally where Terraform is executed
-    args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-  }
-}
-
-provider "helm" {
-  kubernetes {
-    host                   = module.eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-
-    exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "aws"
-      # This requires the awscli to be installed locally where Terraform is executed
-      args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
-    }
-  }
-}
-
 data "aws_availability_zones" "available" {
   # Do not include local zones
   filter {
@@ -101,6 +70,10 @@ module "eks" {
   tags = local.tags
 }
 
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_name
+}
+
 resource "aws_ecr_repository" "fooocus-ecr" {
   name                 = "${local.name}-fooocus"
   image_tag_mutability = "MUTABLE"
@@ -135,4 +108,50 @@ output "ecr_repository_uri" {
 
 output "ecr_repository_uri_neuron" {
   value = aws_ecr_repository.neuron-ecr.repository_url
+}
+
+resource "aws_iam_role" "cloudwatch_agent_role" {
+  name = "${var.name}-eks-cloudwatch-agent-role"
+  tags = {
+    Name        = "${var.name}-eks-cloudwatch-agent-role"
+    Owner       = var.owner
+    Project     = var.project
+  }
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "Service": [
+                    "pods.eks.amazonaws.com"
+                ]
+            },
+            "Action": [
+                "sts:AssumeRole",
+                "sts:TagSession"
+            ]
+        }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "CloudWatchAgentServerPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+  role       = aws_iam_role.cloudwatch_agent_role.name
+}
+
+resource "aws_eks_addon" "amazon_cloudwatch_observability" {
+
+  cluster_name  = var.name
+  addon_name    = "amazon-cloudwatch-observability"
+
+  configuration_values = file("${path.module}/configs/amazon-cloudwatch-observability.json")
+
+  pod_identity_association {
+    role_arn = aws_iam_role.cloudwatch_agent_role.arn
+    service_account = "cloudwatch-agent"
+  }
+
+  depends_on = [module.eks]
 }

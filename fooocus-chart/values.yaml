@@ -19,11 +19,11 @@ resources:
 livenessProbe:
   httpGet:
   port: 7865
-  initialDelaySeconds: 1800
+  initialDelaySeconds: 180
   periodSeconds: 15
 
 readinessProbe:
   httpGet:
   port: 7865
-  initialDelaySeconds: 1800
+  initialDelaySeconds: 180
   periodSeconds: 5

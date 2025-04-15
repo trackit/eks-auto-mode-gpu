@@ -2,6 +2,16 @@
 
 *This repository is a fork of the [original project by AWS Samples](https://github.com/aws-samples/deepseek-using-vllm-on-eks). It has been modified to include additional features and improvements, including the integration of Fooocus.*
 
+## 📚 Table of Contents
+
+- [Hosting Fooocus and DeepSeek-R1 on Amazon EKS](#hosting-fooocus-and-deepseek-r1-on-amazon-eks)
+- [🚀 Deploying Fooocus on Amazon EKS Auto Mode](#deploying-fooocus-on-amazon-eks-auto-mode)
+- [🤖 Deploying DeepSeek-R1 on Amazon EKS Auto Mode](#deploying-deepseek-r1-on-amazon-eks-auto-mode)
+- [💬 Interact with the LLM](#interact-with-the-llm)
+- [🧠 Build a Chatbot UI for the Model](#build-a-chatbot-ui-for-the-model)
+- [📈 Scaling DeepSeek-R1 API on Amazon EKS Auto Mode](#scaling-deepseek-r1-api-on-amazon-eks-auto-mode)
+- [⚠️ Disclaimer](#disclaimer)
+
 ## How to deploy the EKS Cluster
 
 Create the `terraform.tfvars` file according to the `sample.tfvars` and replace the values by the values that you want
@@ -241,6 +251,10 @@ After logging in, you'll see a new **Chatbot tab** where you can interact with t
 In this tab, you'll notice a dropdown menu that lets you switch between Neuron-based and GPU-based deployments!
 
 ![chatbot-ui](/static/images/chatbot.jpg)
+
+## Scaling DeepSeek-R1 API on Amazon EKS Auto Mode
+
+TODO: I have to complete this section
 
 ---
 ### Disclaimer

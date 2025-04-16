@@ -254,7 +254,51 @@ In this tab, you'll notice a dropdown menu that lets you switch between Neuron-b
 
 ## Scaling DeepSeek-R1 API on Amazon EKS Auto Mode
 
-TODO: I have to complete this section
+Set the `enable_deepseek_autoscaling` to `true` in the `tfvars` file to enable autoscaling. Then plan and apply the changes.
+
+```hcl
+enable_deepseek_autoscaling = true
+```
+
+``` bash
+# Plan and apply the changes
+terraform plan -out="plan.out"
+terraform apply "plan.out"
+```
+
+This will deploy the following resources to handle autoscaling:
+
+- **DCGM Exporter**: A NVIDIA tool for monitoring GPU metrics.
+- **Prometheus Operator**: A Kubernetes operator that manages Prometheus instances allowing you to scrape metrics from the DCGM Exporter.
+- **Prometheus Adapter**: A component that exposes Prometheus metrics to the Kubernetes API.
+- **Horizontal Pod Autoscaler**: A Kubernetes resource that automatically scales the number of pods in a deployment based on observed GPU utilization.
+
+But it will also deploy the AWS Application Load Balancer Controller, which is responsible for managing the ALB resources in your cluster. When you deploy multiple instances of the same model, the ALB will automatically route traffic to the appropriate instance based on the load.
+
+Run this following command to get the URL of the load balancer:
+
+``` bash
+terraform output -raw deepseek_ingress_hostname
+```
+
+You can use this curl command to send a request to the model:
+
+``` bash
+curl -s -X POST "http://$(terraform output -raw deepseek_ingress_hostname)/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  --data '{
+	"model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+	"messages": [
+  	{
+    	"role": "user",
+    	"content": "What is Kubernetes?"
+  	}
+	]
+  }' | jq -r '.choices[0].message.content'
+```
+
+Or using the `stress-test.sh` script to send multiple requests to the model.
+Make sure to target the correct model name on the script and also the curl command.
 
 ---
 ### Disclaimer

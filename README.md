@@ -269,8 +269,11 @@ terraform apply "plan.out"
 This will deploy the following resources to handle autoscaling:
 
 - **DCGM Exporter**: A NVIDIA tool for monitoring GPU metrics.
+
 - **Prometheus Operator**: A Kubernetes operator that manages Prometheus instances allowing you to scrape metrics from the DCGM Exporter.
+
 - **Prometheus Adapter**: A component that exposes Prometheus metrics to the Kubernetes API.
+
 - **Horizontal Pod Autoscaler**: A Kubernetes resource that automatically scales the number of pods in a deployment based on observed GPU utilization.
 
 But it will also deploy the AWS Application Load Balancer Controller, which is responsible for managing the ALB resources in your cluster. When you deploy multiple instances of the same model, the ALB will automatically route traffic to the appropriate instance based on the load.
@@ -298,7 +301,7 @@ curl -s -X POST "http://$(terraform output -raw deepseek_ingress_hostname)/v1/ch
 ```
 
 Or using the `stress-test.sh` script to send multiple requests to the model.
-Make sure to target the correct model name on the script and also the curl command.
+Make sure to target the correct model name on the script and on the curl command.
 
 ---
 ### Disclaimer

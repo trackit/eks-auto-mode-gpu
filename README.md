@@ -6,6 +6,7 @@
 
 - [Hosting Fooocus and DeepSeek-R1 on Amazon EKS](#hosting-fooocus-and-deepseek-r1-on-amazon-eks)
 - [🚀 Deploying Fooocus on Amazon EKS Auto Mode](#deploying-fooocus-on-amazon-eks-auto-mode)
+- [📈 Scaling Fooocus with sticky sessions](#scaling-fooocus-with-sticky-sessions)
 - [🤖 Deploying DeepSeek-R1 on Amazon EKS Auto Mode](#deploying-deepseek-r1-on-amazon-eks-auto-mode)
 - [💬 Interact with the LLM](#interact-with-the-llm)
 - [🧠 Build a Chatbot UI for the Model](#build-a-chatbot-ui-for-the-model)
@@ -67,10 +68,41 @@ To access the Fooocus web UI, you need to set up a port-forwarding session to th
 
 ```bash
 # Set up port forwarding to access the Fooocus web UI
-kubectl port-forward svc/fooocus-service -n fooocus 7865:7865
+kubectl port-forward svc/fooocus-service -n fooocus 80:80
 ```
 
 Then open your web browser and navigate to `http://localhost:7865`.
+
+## Scaling Fooocus with sticky sessions
+
+Set the `enable_autoscaling` to `true` in the `tfvars` file to enable autoscaling. Then plan and apply the changes.
+
+```hcl
+enable_autoscaling = true
+```
+
+``` bash
+# Plan and apply the changes
+terraform plan -out="plan.out"
+terraform apply "plan.out"
+```
+
+Check [this part of the readme](#scaling-deepseek-r1-api-on-amazon-eks-auto-mode) to know how it works.
+The autoscaling will be done using the same components as the DeepSeek-R1 API.
+
+We use ALB to route the traffic to the Fooocus service with sticky sessions enabled. Sticky sessions are important to maintain a stateful connexion with cookies, it allow the ALB to route the traffic to the same pod for a given user. So if you want to test different sessions use different browsers or incognito mode.
+For our DeepSeek-R1 API we use the same ALB but without sticky sessions because the API used is stateless.
+
+To access the Fooocus web UI, you need to get the URL of the load balancer.
+
+```bash
+# with terraform
+terraform output -raw fooocus_ingress_hostname
+# or with kubectl
+kubectl get ingress -n fooocus
+```
+
+Then open your web browser and navigate to the URL.
 
 ## Deploying DeepSeek-R1 on Amazon EKS Auto Mode
 

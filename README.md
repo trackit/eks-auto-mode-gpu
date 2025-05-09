@@ -254,10 +254,10 @@ In this tab, you'll notice a dropdown menu that lets you switch between Neuron-b
 
 ## Scaling DeepSeek-R1 API on Amazon EKS Auto Mode
 
-Set the `enable_deepseek_autoscaling` to `true` in the `tfvars` file to enable autoscaling. Then plan and apply the changes.
+Set the `enable_autoscaling` to `true` in the `tfvars` file to enable autoscaling. Then plan and apply the changes.
 
 ```hcl
-enable_deepseek_autoscaling = true
+enable_autoscaling = true
 ```
 
 ``` bash

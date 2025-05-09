@@ -1,16 +1,16 @@
-resource "kubernetes_horizontal_pod_autoscaler_v2" "deepseek_gpu_utilization_hpa" {
+resource "kubernetes_horizontal_pod_autoscaler_v2" "fooocus_gpu_utilization_hpa" {
   count = var.enable_autoscaling ? 1 : 0
 
   metadata {
     name      = "gpu-utilization-hpa"
-    namespace = "deepseek"
+    namespace = "fooocus"
   }
 
   spec {
     scale_target_ref {
       api_version = "apps/v1"
       kind        = "Deployment"
-      name        = "deepseek-gpu-vllm-chart"
+      name        = "fooocus-deployment"
     }
 
     min_replicas = 1

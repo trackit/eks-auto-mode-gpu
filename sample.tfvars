@@ -2,7 +2,7 @@
 enable_gpu = false
 enable_neuron = false
 enable_auto_mode_node_pool = false
-enable_deepseek_autoscaling = false
+enable_autoscaling = false
 deploy_deepseek = false
 deploy_fooocus = false
 name = "eks-automode-gpu"

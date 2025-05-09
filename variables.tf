@@ -10,8 +10,8 @@ variable "enable_neuron" {
   default     = false
 }
 
-variable "enable_deepseek_autoscaling" {
-  description = "Enable DeepSeek Autoscaling"
+variable "enable_autoscaling" {
+  description = "Enable Autoscaling"
   type        = bool
   default     = false
 }
